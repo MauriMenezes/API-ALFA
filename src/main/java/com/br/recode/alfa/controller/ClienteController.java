@@ -2,6 +2,7 @@ package com.br.recode.alfa.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
@@ -62,12 +63,21 @@ public class ClienteController {
   @PostMapping("/cadastrar")
   public ResponseEntity<UsuarioDTO> cadastrar(@RequestBody @Valid UsuarioForm form, UriComponentsBuilder uriBuilder) {
 
+    Optional<Usuario> cli = clienteRepository.findByCpf(form.getCpf());
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-    Usuario cliente = form.converter(encoder);
-    clienteRepository.save(cliente);
 
-    URI uri = uriBuilder.path("/agenda/cadastrar/{id}").buildAndExpand(cliente.getId()).toUri();
-    return ResponseEntity.created(uri).body(new UsuarioDTO(cliente));
+    if (cli.isPresent()) {
+      System.out.println("já existe no banco");
+      return ResponseEntity.badRequest().build();
+
+    } else {
+      System.out.println("não  existe no banco");
+      Usuario cliente = form.converter(encoder);
+      clienteRepository.save(cliente);
+
+      URI uri = uriBuilder.path("/agenda/cadastrar/{id}").buildAndExpand(cliente.getId()).toUri();
+      return ResponseEntity.created(uri).body(new UsuarioDTO(cliente));
+    }
 
   }
 }
